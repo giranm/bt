@@ -1,0 +1,29 @@
+use clap::Args;
+
+#[derive(Debug, Clone, Args)]
+pub struct BaseArgs {
+    /// Output as JSON
+    #[arg(short = 'j', long)]
+    pub json: bool,
+
+    /// Override active project
+    #[arg(short = 'p', long, env = "BRAINTRUST_DEFAULT_PROJECT")]
+    pub project: Option<String>,
+
+    /// Override stored API key (or via BRAINTRUST_API_KEY)
+    #[arg(long, env = "BRAINTRUST_API_KEY")]
+    pub api_key: Option<String>,
+
+    /// Override API URL (or via BRAINTRUST_API_URL)
+    #[arg(long, env = "BRAINTRUST_API_URL")]
+    pub api_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct CLIArgs<T: Args> {
+    #[command(flatten)]
+    pub base: BaseArgs,
+
+    #[command(flatten)]
+    pub args: T,
+}
