@@ -16,6 +16,7 @@ use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 use ratatui::Terminal;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
+use unicode_width::UnicodeWidthStr;
 
 use crate::args::BaseArgs;
 use crate::login::{login, LoginContext};
@@ -210,7 +211,11 @@ fn format_response(response: &SqlResponse, json_output: bool) -> Result<String> 
     if json_output {
         Ok(serde_json::to_string(response)?)
     } else {
-        Ok(serde_json::to_string_pretty(response)?)
+        if let Some(table) = render_table(response) {
+            Ok(table)
+        } else {
+            Ok(serde_json::to_string_pretty(response)?)
+        }
     }
 }
 
@@ -252,6 +257,120 @@ fn print_response(response: &SqlResponse, json_output: bool) -> Result<()> {
     let output = format_response(response, json_output)?;
     println!("{output}");
     Ok(())
+}
+
+fn render_table(response: &SqlResponse) -> Option<String> {
+    let mut headers = extract_headers(&response.schema);
+    if headers.is_empty() {
+        if let Some(first_row) = response.data.first() {
+            headers = first_row.keys().cloned().collect();
+        }
+    }
+
+    if headers.is_empty() {
+        if response.data.is_empty() {
+            return Some("(no rows)".to_string());
+        }
+        return None;
+    }
+
+    let rows: Vec<Vec<String>> = response
+        .data
+        .iter()
+        .map(|row| {
+            headers
+                .iter()
+                .map(|header| format_cell(row.get(header)))
+                .collect()
+        })
+        .collect();
+
+    Some(build_table(&headers, &rows))
+}
+
+fn extract_headers(schema: &Value) -> Vec<String> {
+    let items = schema.get("items").and_then(|v| v.as_object());
+    let properties = items.and_then(|i| i.get("properties")).and_then(|v| v.as_object());
+    properties
+        .map(|props| props.keys().cloned().collect())
+        .unwrap_or_default()
+}
+
+fn format_cell(value: Option<&Value>) -> String {
+    match value {
+        None => String::new(),
+        Some(v) => match v {
+            Value::String(s) => s.clone(),
+            Value::Array(_) | Value::Object(_) => serde_json::to_string(v).unwrap_or_default(),
+            other => other.to_string(),
+        },
+    }
+}
+
+fn build_table(headers: &[String], rows: &[Vec<String>]) -> String {
+    let mut widths: Vec<usize> = headers
+        .iter()
+        .map(|h| UnicodeWidthStr::width(h.as_str()))
+        .collect();
+
+    for row in rows {
+        for (idx, cell) in row.iter().enumerate() {
+            let width = UnicodeWidthStr::width(cell.as_str());
+            if width > widths[idx] {
+                widths[idx] = width;
+            }
+        }
+    }
+
+    let separator = build_separator(&widths);
+    let mut out = String::new();
+    out.push_str(&separator);
+    out.push('\n');
+    out.push_str(&build_row(headers, &widths));
+    out.push('\n');
+    out.push_str(&separator);
+
+    for row in rows {
+        out.push('\n');
+        out.push_str(&build_row(row, &widths));
+    }
+
+    out.push('\n');
+    out.push_str(&separator);
+    out
+}
+
+fn build_separator(widths: &[usize]) -> String {
+    let mut line = String::new();
+    line.push('+');
+    for width in widths {
+        line.push_str(&"-".repeat(width + 2));
+        line.push('+');
+    }
+    line
+}
+
+fn build_row(cells: &[String], widths: &[usize]) -> String {
+    let mut line = String::new();
+    line.push('|');
+    for (cell, width) in cells.iter().zip(widths) {
+        line.push(' ');
+        line.push_str(&pad_cell(cell, *width));
+        line.push(' ');
+        line.push('|');
+    }
+    line
+}
+
+fn pad_cell(cell: &str, width: usize) -> String {
+    let current = UnicodeWidthStr::width(cell);
+    if current >= width {
+        return cell.to_string();
+    }
+    let mut out = String::with_capacity(cell.len() + (width - current));
+    out.push_str(cell);
+    out.extend(std::iter::repeat(' ').take(width - current));
+    out
 }
 
 struct App {

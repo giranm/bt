@@ -19,6 +19,11 @@ Install git hooks:
 pre-commit install
 ```
 
+If you want to run this via mise:
+```bash
+mise run pre-commit-install
+```
+
 ## Local SDK Development
 
 The CLI depends on `braintrust-sdk-rust`. The default dependency is pinned to a git rev in `Cargo.toml`.

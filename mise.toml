@@ -2,3 +2,11 @@
 
 [env]
 _.path = "./target/debug"
+
+[tasks.pre-commit-install]
+description = "Install git hooks via pre-commit"
+run = "pre-commit install"
+
+[tasks.pre-commit]
+description = "Run all pre-commit hooks"
+run = "pre-commit run --all-files --show-diff-on-failure"
