@@ -35,6 +35,8 @@ cp .cargo/config.toml.example .cargo/config.toml
 
 Then ensure the path in `.cargo/config.toml` points to your local SDK checkout (default: `../braintrust-sdk-rust`). This file is ignored by git.
 
+Note: when the local override is enabled, Cargo will treat the SDK as a path dependency and update `Cargo.lock` accordingly. The committed lockfile should reflect the git dependency (for CI). If you need to update `Cargo.lock`, temporarily move `.cargo/config.toml` out of the way, run `cargo generate-lockfile`, then restore it.
+
 ## Running
 
 Build:
