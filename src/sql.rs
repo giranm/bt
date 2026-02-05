@@ -5,7 +5,9 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use clap::Args;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use crossterm::ExecutableCommand;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -133,7 +135,11 @@ fn handle_key_event(
     handle: &tokio::runtime::Handle,
 ) -> Result<bool> {
     match key.code {
-        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => return Ok(true),
+        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.clear_input();
+            app.status = "Cleared input".to_string();
+        }
+        KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => return Ok(true),
         KeyCode::Esc => return Ok(true),
         KeyCode::Char('l') if key.modifiers.contains(KeyModifiers::CONTROL) => {
             app.output.clear();
@@ -195,8 +201,8 @@ fn ui(frame: &mut Frame<'_>, app: &App) {
     frame.render_widget(output, chunks[0]);
 
     let (input_view, cursor_col) = app.input_view(chunks[1]);
-    let input = Paragraph::new(input_view)
-        .block(Block::default().title("SQL").borders(Borders::ALL));
+    let input =
+        Paragraph::new(input_view).block(Block::default().title("SQL").borders(Borders::ALL));
     frame.render_widget(input, chunks[1]);
     frame.set_cursor_position((chunks[1].x + 1 + cursor_col, chunks[1].y + 1));
 
@@ -290,7 +296,9 @@ fn render_table(response: &SqlResponse) -> Option<String> {
 
 fn extract_headers(schema: &Value) -> Vec<String> {
     let items = schema.get("items").and_then(|v| v.as_object());
-    let properties = items.and_then(|i| i.get("properties")).and_then(|v| v.as_object());
+    let properties = items
+        .and_then(|i| i.get("properties"))
+        .and_then(|v| v.as_object());
     properties
         .map(|props| props.keys().cloned().collect())
         .unwrap_or_default()
@@ -516,11 +524,7 @@ impl App {
 }
 
 fn prev_char_boundary(s: &str, idx: usize) -> usize {
-    s[..idx]
-        .char_indices()
-        .last()
-        .map(|(i, _)| i)
-        .unwrap_or(0)
+    s[..idx].char_indices().last().map(|(i, _)| i).unwrap_or(0)
 }
 
 fn next_char_boundary(s: &str, idx: usize) -> usize {
@@ -529,7 +533,5 @@ fn next_char_boundary(s: &str, idx: usize) -> usize {
     }
     let mut iter = s[idx..].char_indices();
     iter.next();
-    iter.next()
-        .map(|(i, _)| idx + i)
-        .unwrap_or_else(|| s.len())
+    iter.next().map(|(i, _)| idx + i).unwrap_or_else(|| s.len())
 }
