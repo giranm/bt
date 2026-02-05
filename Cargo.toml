@@ -8,4 +8,9 @@ description = "The Braintrust command line interface"
 license = "Apache-2.0"
 
 [dependencies]
+anyhow = "1.0.89"
+braintrust-sdk-rust = { git = "https://github.com/braintrustdata/braintrust-sdk-rust", rev = "33ee4c8b8c1e4cd11961f7572100298caa3a39d0" }
 clap = { version = "4.5.20", features = ["derive", "env"] }
+reqwest = { version = "0.12.7", default-features = false, features = ["json", "rustls-tls"] }
+serde_json = "1.0.128"
+tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros"] }

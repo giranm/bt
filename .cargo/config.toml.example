@@ -1,0 +1,2 @@
+[patch."https://github.com/braintrustdata/braintrust-sdk-rust"]
+braintrust-sdk-rust = { path = "../braintrust-sdk-rust" }
