@@ -3,7 +3,9 @@ use clap::{Parser, Subcommand};
 
 mod args;
 mod login;
+mod projects;
 mod sql;
+mod ui;
 
 use crate::args::CLIArgs;
 
@@ -16,7 +18,10 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// Run SQL queries against Braintrust
     Sql(CLIArgs<sql::SqlArgs>),
+    /// Manage projects
+    Projects(CLIArgs<projects::ProjectsArgs>),
 }
 
 #[tokio::main]
@@ -25,6 +30,7 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Sql(cmd) => sql::run(cmd.base, cmd.args).await?,
+        Commands::Projects(cmd) => projects::run(cmd.base, cmd.args).await?,
     }
 
     Ok(())
