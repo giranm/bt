@@ -1,11 +1,12 @@
 use std::io::IsTerminal;
+use std::time::Duration;
 
 use anyhow::{bail, Result};
 use dialoguer::Input;
 use reqwest::Client;
 
 use crate::login::LoginContext;
-use crate::ui::{print_command_status, with_spinner, CommandStatus};
+use crate::ui::{print_command_status, with_spinner, with_spinner_visible, CommandStatus};
 
 use super::api;
 
@@ -30,7 +31,13 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
         bail!("project '{}' already exists", name);
     }
 
-    match with_spinner("Creating project...", api::create_project(http, ctx, &name)).await {
+    match with_spinner_visible(
+        "Creating project...",
+        api::create_project(http, ctx, &name),
+        Duration::from_millis(300),
+    )
+    .await
+    {
         Ok(_) => {
             print_command_status(
                 CommandStatus::Success,

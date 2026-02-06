@@ -20,9 +20,12 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
                 bail!("project name required. Use: bt projects delete <name>");
             }
             let name = select_project_interactive(http, ctx).await?;
-            with_spinner("Loading project...", api::get_project_by_name(http, ctx, &name))
-                .await?
-                .ok_or_else(|| anyhow::anyhow!("project '{}' not found", name))?
+            with_spinner(
+                "Loading project...",
+                api::get_project_by_name(http, ctx, &name),
+            )
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("project '{}' not found", name))?
         }
     };
 
@@ -37,7 +40,11 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
         }
     }
 
-    with_spinner("Deleting project...", api::delete_project(http, ctx, &project.id)).await?;
+    with_spinner(
+        "Deleting project...",
+        api::delete_project(http, ctx, &project.id),
+    )
+    .await?;
     eprintln!("Deleted {}", project.name);
 
     Ok(())
