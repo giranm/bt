@@ -18,18 +18,18 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
             if exists.is_none() {
                 // Offer to create
                 if !std::io::stdin().is_terminal() {
-                    bail!("project '{}' not found", n);
+                    bail!("project '{n}' not found");
                 }
 
                 let create = dialoguer::Confirm::new()
-                    .with_prompt(format!("Project '{}' not found. Create it?", n))
+                    .with_prompt(format!("Project '{n}' not found. Create it?"))
                     .default(false)
                     .interact()?;
 
                 if create {
                     with_spinner("Creating project...", api::create_project(http, ctx, n)).await?;
                 } else {
-                    bail!("project '{}' not found", n);
+                    bail!("project '{n}' not found");
                 }
             }
             n.to_string()
@@ -40,7 +40,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
     ui::print_env_export(
         "BRAINTRUST_DEFAULT_PROJECT",
         &project_name,
-        &format!("Switched to {}", project_name),
+        &format!("Switched to {project_name}"),
     );
     Ok(())
 }

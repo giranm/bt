@@ -36,7 +36,7 @@ pub async fn with_spinner<T, F: Future<Output = T>>(message: &str, fut: F) -> T 
 
     let result = fut.await;
     spinner.finish_and_clear();
-    return result;
+    result
 }
 
 pub async fn with_spinner_visible<T, F: Future<Output = T>>(

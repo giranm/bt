@@ -10,6 +10,8 @@ pub struct Project {
     pub id: String,
     pub name: String,
     pub org_id: String,
+    #[serde(default)]
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -34,7 +36,7 @@ pub async fn list_projects(http: &Client, ctx: &LoginContext) -> Result<Vec<Proj
     if !response.status().is_success() {
         let status = response.status();
         let body = response.text().await.unwrap_or_default();
-        anyhow::bail!("failed to list projects ({}): {}", status, body);
+        anyhow::bail!("failed to list projects ({status}): {body}");
     }
 
     let list: ListResponse = response
@@ -61,7 +63,7 @@ pub async fn create_project(http: &Client, ctx: &LoginContext, name: &str) -> Re
     if !response.status().is_success() {
         let status = response.status();
         let body = response.text().await.unwrap_or_default();
-        anyhow::bail!("failed to create project ({}): {}", status, body);
+        anyhow::bail!("failed to create project ({status}): {body}");
     }
 
     response
@@ -74,7 +76,7 @@ pub async fn delete_project(http: &Client, ctx: &LoginContext, project_id: &str)
     let url = format!(
         "{}/v1/project/{}",
         ctx.api_url.trim_end_matches('/'),
-        project_id
+        encode(project_id)
     );
 
     let response = http
@@ -87,7 +89,7 @@ pub async fn delete_project(http: &Client, ctx: &LoginContext, project_id: &str)
     if !response.status().is_success() {
         let status = response.status();
         let body = response.text().await.unwrap_or_default();
-        anyhow::bail!("failed to delete project ({}): {}", status, body);
+        anyhow::bail!("failed to delete project ({status}): {body}");
     }
 
     Ok(())
@@ -115,7 +117,7 @@ pub async fn get_project_by_name(
     if !response.status().is_success() {
         let status = response.status();
         let body = response.text().await.unwrap_or_default();
-        bail!("failed to get project ({}): {}", status, body);
+        bail!("failed to get project ({status}): {body}");
     }
 
     let list: ListResponse = response

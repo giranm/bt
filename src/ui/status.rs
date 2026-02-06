@@ -10,5 +10,5 @@ pub fn print_command_status(status: CommandStatus, message: &str) {
         CommandStatus::Success => style("✓").green(),
         CommandStatus::Error => style("✗").red(),
     };
-    eprintln!("{} {}", indicator, message);
+    println!("{indicator} {message}");
 }

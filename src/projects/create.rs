@@ -28,7 +28,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
     )
     .await?;
     if exists.is_some() {
-        bail!("project '{}' already exists", name);
+        bail!("project '{name}' already exists");
     }
 
     match with_spinner_visible(
@@ -41,15 +41,12 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
         Ok(_) => {
             print_command_status(
                 CommandStatus::Success,
-                &format!("Successfully created '{}'", name),
+                &format!("Successfully created '{name}'"),
             );
             Ok(())
         }
         Err(e) => {
-            print_command_status(
-                CommandStatus::Error,
-                &format!("Failed to create '{}'", name),
-            );
+            print_command_status(CommandStatus::Error, &format!("Failed to create '{name}'"));
             Err(e)
         }
     }

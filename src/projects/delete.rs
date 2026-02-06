@@ -5,7 +5,7 @@ use dialoguer::Confirm;
 use reqwest::Client;
 
 use crate::login::LoginContext;
-use crate::ui::with_spinner;
+use crate::ui::{print_command_status, with_spinner, CommandStatus};
 
 use super::api;
 use super::switch::select_project_interactive;
@@ -14,7 +14,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
     let project = match name {
         Some(n) => with_spinner("Loading project...", api::get_project_by_name(http, ctx, n))
             .await?
-            .ok_or_else(|| anyhow::anyhow!("project '{}' not found", n))?,
+            .ok_or_else(|| anyhow::anyhow!("project '{n}' not found"))?,
         None => {
             if !std::io::stdin().is_terminal() {
                 bail!("project name required. Use: bt projects delete <name>");
@@ -25,7 +25,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
                 api::get_project_by_name(http, ctx, &name),
             )
             .await?
-            .ok_or_else(|| anyhow::anyhow!("project '{}' not found", name))?
+            .ok_or_else(|| anyhow::anyhow!("project '{name}' not found"))?
         }
     };
 
@@ -40,12 +40,25 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
         }
     }
 
-    with_spinner(
+    match with_spinner(
         "Deleting project...",
         api::delete_project(http, ctx, &project.id),
     )
-    .await?;
-    eprintln!("Deleted {}", project.name);
-
-    Ok(())
+    .await
+    {
+        Ok(_) => {
+            print_command_status(
+                CommandStatus::Success,
+                &format!("Deleted '{}'", project.name),
+            );
+            Ok(())
+        }
+        Err(e) => {
+            print_command_status(
+                CommandStatus::Error,
+                &format!("Failed to delete '{}'", project.name),
+            );
+            Err(e)
+        }
+    }
 }

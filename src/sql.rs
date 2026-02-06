@@ -249,7 +249,7 @@ async fn execute_query(
     if !response.status().is_success() {
         let status = response.status();
         let body = response.text().await.unwrap_or_default();
-        anyhow::bail!("btql request failed ({}): {}", status, body);
+        anyhow::bail!("btql request failed ({status}): {body}");
     }
 
     response

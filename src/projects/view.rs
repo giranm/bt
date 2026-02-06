@@ -15,7 +15,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
         Some(n) => n.to_string(),
         None => {
             if !std::io::stdin().is_terminal() {
-                bail!("Must specify a project in non-TTY mode")
+                bail!("project name required. Use: bt projects view <name>")
             }
             select_project_interactive(http, ctx).await?
         }
@@ -28,7 +28,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
     )
     .await?;
     if exists.is_none() {
-        bail!("project '{}' not found", project_name);
+        bail!("project '{project_name}' not found");
     }
 
     let url = format!(
@@ -39,10 +39,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
     );
 
     open::that(&url)?;
-    print_command_status(
-        CommandStatus::Success,
-        &format!("Opened {} in browser", url),
-    );
+    print_command_status(CommandStatus::Success, &format!("Opened {url} in browser"));
 
     Ok(())
 }
