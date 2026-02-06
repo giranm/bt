@@ -1,5 +1,8 @@
 # Mise will automatically read and use .tool-versions files as well as this file.
 
+[tools]
+pre-commit = "latest"
+
 [env]
 _.path = "./target/debug"
 
