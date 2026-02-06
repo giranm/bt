@@ -1,15 +1,14 @@
 use anyhow::Result;
 use dialoguer::console;
-use reqwest::Client;
 use unicode_width::UnicodeWidthStr;
 
-use crate::login::LoginContext;
+use crate::http::ApiClient;
 use crate::ui::with_spinner;
 
 use super::api;
 
-pub async fn run(http: &Client, ctx: &LoginContext, json: bool) -> Result<()> {
-    let projects = with_spinner("Loading projects...", api::list_projects(http, ctx)).await?;
+pub async fn run(client: &ApiClient, org_name: &str, json: bool) -> Result<()> {
+    let projects = with_spinner("Loading projects...", api::list_projects(client)).await?;
 
     if json {
         println!("{}", serde_json::to_string(&projects)?);
@@ -17,7 +16,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, json: bool) -> Result<()> {
         println!(
             "{} projects found in {}\n",
             console::style(&projects.len()),
-            console::style(&ctx.login.org_name).bold()
+            console::style(org_name).bold()
         );
 
         // Calculate column widths

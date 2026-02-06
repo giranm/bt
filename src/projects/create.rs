@@ -3,14 +3,13 @@ use std::time::Duration;
 
 use anyhow::{bail, Result};
 use dialoguer::Input;
-use reqwest::Client;
 
-use crate::login::LoginContext;
+use crate::http::ApiClient;
 use crate::ui::{print_command_status, with_spinner, with_spinner_visible, CommandStatus};
 
 use super::api;
 
-pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Result<()> {
+pub async fn run(client: &ApiClient, name: Option<&str>) -> Result<()> {
     let name = match name {
         Some(n) if !n.is_empty() => n.to_string(),
         _ => {
@@ -24,7 +23,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
     // Check if project already exists
     let exists = with_spinner(
         "Checking project...",
-        api::get_project_by_name(http, ctx, &name),
+        api::get_project_by_name(client, &name),
     )
     .await?;
     if exists.is_some() {
@@ -33,7 +32,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
 
     match with_spinner_visible(
         "Creating project...",
-        api::create_project(http, ctx, &name),
+        api::create_project(client, &name),
         Duration::from_millis(300),
     )
     .await

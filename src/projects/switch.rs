@@ -1,20 +1,19 @@
 use std::io::IsTerminal;
 
 use anyhow::{bail, Result};
-use reqwest::Client;
 
-use crate::login::LoginContext;
+use crate::http::ApiClient;
 use crate::ui;
 use crate::ui::with_spinner;
 
 use super::api;
 
-pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Result<()> {
+pub async fn run(client: &ApiClient, name: Option<&str>) -> Result<()> {
     let project_name = match name {
         Some(n) => {
             // Check if project exists
             let exists =
-                with_spinner("Loading project...", api::get_project_by_name(http, ctx, n)).await?;
+                with_spinner("Loading project...", api::get_project_by_name(client, n)).await?;
             if exists.is_none() {
                 // Offer to create
                 if !std::io::stdin().is_terminal() {
@@ -27,14 +26,14 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
                     .interact()?;
 
                 if create {
-                    with_spinner("Creating project...", api::create_project(http, ctx, n)).await?;
+                    with_spinner("Creating project...", api::create_project(client, n)).await?;
                 } else {
                     bail!("project '{n}' not found");
                 }
             }
             n.to_string()
         }
-        None => select_project_interactive(http, ctx).await?,
+        None => select_project_interactive(client).await?,
     };
 
     ui::print_env_export(
@@ -45,8 +44,8 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
     Ok(())
 }
 
-pub async fn select_project_interactive(http: &Client, ctx: &LoginContext) -> Result<String> {
-    let mut projects = with_spinner("Loading projects...", api::list_projects(http, ctx)).await?;
+pub async fn select_project_interactive(client: &ApiClient) -> Result<String> {
+    let mut projects = with_spinner("Loading projects...", api::list_projects(client)).await?;
     if projects.is_empty() {
         bail!("no projects found");
     }

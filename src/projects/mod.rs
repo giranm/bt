@@ -1,7 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 
 use crate::args::BaseArgs;
+use crate::http::ApiClient;
 use crate::login::login;
 
 mod api;
@@ -71,15 +72,17 @@ struct SwitchArgs {
 
 pub async fn run(base: BaseArgs, args: ProjectsArgs) -> Result<()> {
     let ctx = login(&base).await?;
-    let http = reqwest::Client::builder()
-        .build()
-        .context("failed to build HTTP client")?;
+    let client = ApiClient::new(&ctx)?;
 
     match args.command {
-        None | Some(ProjectsCommands::List) => list::run(&http, &ctx, base.json).await,
-        Some(ProjectsCommands::Create(a)) => create::run(&http, &ctx, a.name.as_deref()).await,
-        Some(ProjectsCommands::View(a)) => view::run(&http, &ctx, a.name()).await,
-        Some(ProjectsCommands::Delete(a)) => delete::run(&http, &ctx, a.name.as_deref()).await,
-        Some(ProjectsCommands::Switch(a)) => switch::run(&http, &ctx, a.name.as_deref()).await,
+        None | Some(ProjectsCommands::List) => {
+            list::run(&client, &ctx.login.org_name, base.json).await
+        }
+        Some(ProjectsCommands::Create(a)) => create::run(&client, a.name.as_deref()).await,
+        Some(ProjectsCommands::View(a)) => {
+            view::run(&client, &ctx.app_url, &ctx.login.org_name, a.name()).await
+        }
+        Some(ProjectsCommands::Delete(a)) => delete::run(&client, a.name.as_deref()).await,
+        Some(ProjectsCommands::Switch(a)) => switch::run(&client, a.name.as_deref()).await,
     }
 }

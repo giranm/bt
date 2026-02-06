@@ -2,27 +2,26 @@ use std::io::IsTerminal;
 
 use anyhow::{bail, Result};
 use dialoguer::Confirm;
-use reqwest::Client;
 
-use crate::login::LoginContext;
+use crate::http::ApiClient;
 use crate::ui::{print_command_status, with_spinner, CommandStatus};
 
 use super::api;
 use super::switch::select_project_interactive;
 
-pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Result<()> {
+pub async fn run(client: &ApiClient, name: Option<&str>) -> Result<()> {
     let project = match name {
-        Some(n) => with_spinner("Loading project...", api::get_project_by_name(http, ctx, n))
+        Some(n) => with_spinner("Loading project...", api::get_project_by_name(client, n))
             .await?
             .ok_or_else(|| anyhow::anyhow!("project '{n}' not found"))?,
         None => {
             if !std::io::stdin().is_terminal() {
                 bail!("project name required. Use: bt projects delete <name>");
             }
-            let name = select_project_interactive(http, ctx).await?;
+            let name = select_project_interactive(client).await?;
             with_spinner(
                 "Loading project...",
-                api::get_project_by_name(http, ctx, &name),
+                api::get_project_by_name(client, &name),
             )
             .await?
             .ok_or_else(|| anyhow::anyhow!("project '{name}' not found"))?
@@ -42,7 +41,7 @@ pub async fn run(http: &Client, ctx: &LoginContext, name: Option<&str>) -> Resul
 
     match with_spinner(
         "Deleting project...",
-        api::delete_project(http, ctx, &project.id),
+        api::delete_project(client, &project.id),
     )
     .await
     {

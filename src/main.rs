@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod args;
+mod http;
 mod login;
 mod projects;
 mod sql;
