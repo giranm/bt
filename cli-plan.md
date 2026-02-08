@@ -85,7 +85,7 @@ Acceptance criteria:
 
 - A commit to any branch yields installable canary binaries/installers for all configured targets.
 
-## PR4: In-CLI Self-Update
+## PR4: In-CLI Self-Update (Done)
 
 Scope:
 
@@ -118,6 +118,13 @@ Scope:
   - run `bt --version`
   - self-update dry-run/check path.
 
+Status in this branch:
+
+- Added README install/update/troubleshooting docs and forward-looking roadmap updates.
+- Added release smoke install jobs for stable and canary workflows (Linux/macOS/Windows).
+- Added checksum verification guidance for manual archive installs.
+- Remaining hardening is mostly expansion work (for example extra architecture coverage and signature verification flow docs).
+
 Acceptance criteria:
 
 - New user can install and run `bt` without Cargo.
@@ -137,8 +144,8 @@ Acceptance criteria:
    - Linux (x64)
    - Windows (x64 PowerShell)
 5. Verify PR3 canary channel on both `main` and a feature branch.
-6. Implement PR4 self-update command.
-7. Complete PR5 docs/tests.
+6. Implement PR4 self-update command. (Done)
+7. Complete PR5 docs/tests. (Mostly done)
 
 ## Risks and Mitigations
 

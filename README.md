@@ -74,6 +74,31 @@ bt --version
 
 On first install, open a new shell if `bt` is not found immediately.
 
+For manual archive installs, verify checksums before extracting:
+
+```bash
+curl -fsSL -O "https://github.com/braintrustdata/bt/releases/download/<tag>/bt-<target>.tar.gz"
+curl -fsSL -O "https://github.com/braintrustdata/bt/releases/download/<tag>/bt-<target>.tar.gz.sha256"
+shasum -a 256 -c "bt-<target>.tar.gz.sha256"
+```
+
+## Self Update
+
+`bt` can self-update when installed via the official installer.
+
+```bash
+# install latest stable
+bt self update
+
+# check without installing
+bt self update --check
+
+# switch/update to latest mainline canary
+bt self update --channel canary
+```
+
+If `bt` was installed via another package manager (Homebrew, apt, choco, etc), use that package manager to update instead.
+
 ## Uninstall
 
 Unix-like systems:
@@ -92,9 +117,15 @@ Remove-Item -Force (Join-Path $cargoHome "bin\\bt.exe") -ErrorAction SilentlyCon
 Remove-Item -Recurse -Force (Join-Path $env:APPDATA "bt") -ErrorAction SilentlyContinue
 ```
 
+## Troubleshooting
+
+- If `bt` is not found after install, start a new shell or add `${CARGO_HOME:-$HOME/.cargo}/bin` to your `PATH`.
+- If `bt self update --check` hits GitHub API limits in CI, set `GITHUB_TOKEN` in the environment.
+- If your network blocks GitHub asset downloads, install from a machine with direct access or configure your proxy/firewall to allow `github.com` and `api.github.com`.
+
 ## Roadmap / TODO
 
-- Add first-class self-update command in the CLI (`bt self update`) with stable/canary channels.
-- Improve release verification and smoke tests for installer flows across macOS/Linux/Windows.
+- Add richer channel controls for self-update (for example pinned/branch canary selection).
+- Expand release verification and smoke tests for installer flows across more architectures/environments.
 - Add `bt eval` support on Windows (today, `bt eval` is Unix-only due to Unix socket usage).
-- Add clearer upgrade/downgrade docs for channel switching and pinned canary installs.
+- Add signed artifact verification guidance (signature flow) in install and upgrade docs.
